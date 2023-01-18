@@ -1,28 +1,43 @@
 import { Injectable } from '@nestjs/common';
-import { createClient } from 'redis';
+import { RedisClientType, createClient } from 'redis';
+import { Observable, of, map, from } from 'rxjs';
+
 @Injectable()
 export class AppService {
-  async getHello() {
-    const client = createClient();
-    console.log(client);
+  private readonly hashMap: Map<string, string>;
+  private readonly redisClient: RedisClientType;
 
-    client.on('error', (err) => console.log('Redis Client Error', err));
+  constructor() {
+    this.hashMap = new Map<string, string>();
 
-    await client.connect();
+    const host = 'localhost' || '127.0.0.1';
+    const port = 6379;
+    this.redisClient = createClient({
+      url: `redis://${host}:${port}`,
+    });
 
-    await client.set('redis-nestjs', 'success');
-    const value = await client.get('key');
-    console.log(value);
-    await client.disconnect();
-
-    return 'Hello World';
+    from(this.redisClient.connect()).subscribe({ error: console.error });
+    this.redisClient.on('connect', () => console.log('Redis connected'));
+    this.redisClient.on('error', console.error);
   }
 
-  // client.on('error', (err) => console.log('Redis Client Error', err));
+  async shorten(url: string): Promise<Observable<string>> {
+    const hash = Math.random().toString(36).slice(7);
+    const baseURL = 'http://localhost:3000';
+    const shortUrl = `${baseURL}/${hash}`;
+    await this.redisClient.set(hash, shortUrl);
+    return this.setUrl(hash, url).pipe(map(() => hash));
+  }
 
-  // await client.connect();
+  setUrl(hash: string, url: string): Observable<string> {
+    return of(this.hashMap.set(hash, url).get(hash));
+  }
 
-  // await client.set('key', 'value');
-  // const value = await client.get('key');
-  // await client.disconnect();
+  retrieve(hash: string): Observable<string> {
+    return this.getUrl(hash);
+  }
+
+  getUrl(hash: string): Observable<string> {
+    return of(this.hashMap.get(hash));
+  }
 }
