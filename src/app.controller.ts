@@ -40,8 +40,14 @@ export class AppController {
   }
 
   @Get(':hash')
-  @Redirect()
-  retrieveAndRedirect(@Param('hash') hash): Observable<{ url: string }> {
-    return this.appService.retrieve(hash).pipe(map((url) => ({ url })));
+  async retrieveAndRedirect(@Param('hash') hash) {
+    const res = await this.appService.retrieve(hash);
+    console.log(res.hash);
+    return res;
+  }
+
+  @Get('getUrlData/:hash')
+  async getUrlData(@Param('hash') hash) {
+    return await this.appService.getUrlData(hash);
   }
 }

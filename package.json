@@ -29,10 +29,13 @@
     "@nestjs/platform-express": "^9.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
+    "moment": "^2.29.4",
     "nanoid": "^4.0.0",
     "redis": "^4.5.1",
     "reflect-metadata": "^0.1.13",
-    "rxjs": "^7.2.0"
+    "request": "^2.88.2",
+    "rxjs": "^7.2.0",
+    "socket.io": "^4.5.4"
   },
   "devDependencies": {
     "@nestjs/cli": "^9.0.0",
