@@ -1,7 +1,15 @@
-import { Controller, Get, Post, Body, Redirect, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Redirect,
+  Param,
+  Req,
+} from '@nestjs/common';
 import { AppService } from './app.service';
 import { map, Observable, of } from 'rxjs';
-
+import { Request } from 'express';
 interface ShortenResponse {
   hash: string;
 }
@@ -17,6 +25,7 @@ export class AppController {
 
   @Post()
   async shorten(
+    @Req() req: Request,
     @Body('url') url: string,
   ): Promise<Observable<ShortenResponse | ErrorResponse>> {
     if (!url) {
@@ -25,12 +34,20 @@ export class AppController {
         code: 400,
       });
     }
-    return (await this.appService.shorten(url)).pipe(map((hash) => ({ hash })));
+    return (await this.appService.shorten(url, req)).pipe(
+      map((hash) => ({ hash })),
+    );
   }
 
   @Get(':hash')
-  @Redirect()
-  retrieveAndRedirect(@Param('hash') hash): Observable<{ url: string }> {
-    return this.appService.retrieve(hash).pipe(map((url) => ({ url })));
+  async retrieveAndRedirect(@Param('hash') hash) {
+    const res = await this.appService.retrieve(hash);
+    console.log(res.hash);
+    return res;
+  }
+
+  @Get('getUrlData/:hash')
+  async getUrlData(@Param('hash') hash) {
+    return await this.appService.getUrlData(hash);
   }
 }
