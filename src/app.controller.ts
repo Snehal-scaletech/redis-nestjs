@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Body,
-  Redirect,
   Param,
   Req,
 } from '@nestjs/common';
@@ -22,6 +21,13 @@ interface ErrorResponse {
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
+
+  @Get('csrf')
+  async generateCSRFToken(@Req() req: any) {
+    console.log("csruf: "+req.csrfToken());
+    const token = await req.csrfToken();
+    return {token:token};
+  }
 
   @Post()
   async shorten(
