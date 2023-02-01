@@ -200,38 +200,30 @@ export class AppService {
     return of(this.hashMap.set(hash, url).get(hash));
   }
 
-  // async retrieve(hash: string): Promise<Observable<string>> {
-  //   const timestamp_inunix = Math.floor(new Date().getTime() / 1000);
-  //   const timestamp = new Date().toISOString();
-  //   await this.redisClient.hSet(
-  //     `users:${hash}:${timestamp_inunix}`,
-  //     'timestamp_inunix',
-  //     timestamp_inunix,
-  //   );
-  //   await this.redisClient.hSet(
-  //     `users:${hash}:${timestamp_inunix}`,
-  //     'timestamp',
-  //     timestamp,
-  //   );
-  //   await this.redisClient.hIncrBy(
-  //     `users:${hash}:${timestamp_inunix}`,
-  //     'userCount',
-  //     1,
-  //   );
-  //   // const data = this.getUrl(hash);
-  //   // console.log(data);
-  //   return this.getUrl(hash);
-  // }
   async retrieve(urlCode: string) {
     try {
+      const timestamp_inunix = Math.floor(new Date().getTime() / 1000);
+      const timestamp = new Date().toISOString();
+      await this.redisClient.hSet(
+        `users:${urlCode}:${timestamp_inunix}`,
+        'timestamp_inunix',
+        timestamp_inunix,
+      );
+      await this.redisClient.hSet(
+        `users:${urlCode}:${timestamp_inunix}`,
+        'timestamp',
+        timestamp,
+      );
+      await this.redisClient.hIncrBy(
+        `users:${urlCode}:${timestamp_inunix}`,
+        'userCount',
+        1,
+      );
       const url = await this.redisClient.hGetAll(`${urlCode}`);
       if (url) return url;
     } catch (error) {
       throw new NotFoundException('Resource Not Found');
     }
-  }
-  getUrl(hash: string): Observable<string> {
-    return of(this.hashMap.get(hash));
   }
 
   async getUrlData(hash: string) {
@@ -261,10 +253,37 @@ export class AppService {
     const response = await Promise.all(result);
     const mainArray = [
       {
-        userUrlDetails: userUrlDetails,
-        datetimeData: response,
+        // userUrlDetails: userUrlDetails,
+        datetimeData: [
+          {
+            datetime: '2023-02-01T10:12:59.949Z',
+            user_count: '2',
+          },
+          {
+            datetime: '2023-00-31T10:12:42.506Z',
+            user_count: '1',
+          },
+          {
+            datetime: '2023-01-01T10:12:58.905Z',
+            user_count: '2',
+          },
+          {
+            datetime: '2023-02-01T10:13:00.669Z',
+            user_count: '2',
+          },
+        ],
       },
-      { allUsers: [await Promise.all(fetchData)] },
+      {
+        allUsers: await Promise.all(fetchData)
+          .then(function (values) {
+            return values.filter(function (value) {
+              return typeof value !== 'undefined';
+            });
+          })
+          .then(function (values) {
+            return values;
+          }),
+      },
     ];
     return mainArray;
   }
